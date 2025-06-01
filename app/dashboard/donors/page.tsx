@@ -14,7 +14,7 @@ import { Button } from "@/components/ui/button"
 import { useState, useEffect } from "react"
 
 // Configuration
-const API_BASE_URL ="https://192.168.1.213:57679"
+const API_BASE_URL ="https://192.168.1.213:57699"
 const USE_MOCK_DATA = process.env.NEXT_PUBLIC_USE_MOCK_DATA === "false"
 
 // API Response Interfaces
@@ -173,10 +173,10 @@ export default function DonorsPage() {
 
       // Fetch both donors and wilayas
       const [donorsResponse, wilayasResponse] = await Promise.all([
-        fetch(`${API_BASE_URL}/users`, {
+        fetch(`${API_BASE_URL}/users?level=1`, {
           method: "GET",
           headers: {
-            "Content-Type": "application/json",
+            // "Content-Type": "application/json",
           },
           signal: controller.signal,
         }),
