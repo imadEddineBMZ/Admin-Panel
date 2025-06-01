@@ -218,14 +218,14 @@ export default function AnalyticsPage() {
         fetch(`${API_BASE_URL}/Dashboard/stats`, {
           method: "GET",
           headers: {
-            "Content-Type": "application/json",
+            // "Content-Type": "application/json",
           },
           signal: controller.signal,
         }),
         fetch(`${API_BASE_URL}/BloodDonationRequests`, {
           method: "GET",
           headers: {
-            "Content-Type": "application/json",
+            // "Content-Type": "application/json",
           },
           signal: controller.signal,
         }),
