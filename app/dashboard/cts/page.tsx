@@ -189,7 +189,6 @@ export default function CTSPage() {
   const [usingMockData, setUsingMockData] = useState(false)
 
   const fetchData = async (retryCount = 0) => {
-    // Log initial pour démarrer le traçage
     console.log("🔍 fetchData called, retryCount:", retryCount);
     console.log("📊 USE_MOCK_DATA:", USE_MOCK_DATA);
     console.log("🌐 API_BASE_URL:", API_BASE_URL);
@@ -210,16 +209,26 @@ export default function CTSPage() {
       const controller = new AbortController()
       const timeoutId = setTimeout(() => controller.abort(), 10000)
 
-      // Fetch both centers and wilayas
-      const filter = {
-        wilayaId: 16,  // 0 pour tous les wilayas ou une valeur spécifique
-        paginationTake: 50,
-        paginationSkip: 0
-      };
+      // Construire l'URL en fonction de la wilaya sélectionnée
+      let btcUrl = '';
+      let filter: { wilayaId: number; paginationTake: number; paginationSkip: number } | {} = {};
       
-      // Log avant de faire les requêtes
-      console.log("🔄 Preparing to fetch with filter:", filter);
-      const btcUrl = `${API_BASE_URL}/BTC?wilayaId=${filter.wilayaId}&paginationTake=${filter.paginationTake}&paginationSkip=${filter.paginationSkip}&level=0`;
+      if (selectedWilaya === 'all') {
+        // Par défaut, récupérer tous les hôpitaux de toutes les wilayas
+        btcUrl = `${API_BASE_URL}/BTC?level=1`;
+        console.log("🔄 Fetching all hospitals with default URL");
+      } else {
+        // Filtre par wilaya spécifique
+        filter = {
+          wilayaId: parseInt(selectedWilaya),
+          paginationTake: 50,
+          paginationSkip: 0
+        };
+        const typedFilter = filter as { wilayaId: number; paginationTake: number; paginationSkip: number };
+        btcUrl = `${API_BASE_URL}/BTC?wilayaId=${typedFilter.wilayaId}&paginationTake=${typedFilter.paginationTake}&paginationSkip=${typedFilter.paginationSkip}&level=0`;
+        console.log("🔄 Fetching hospitals with filter:", typedFilter);
+      }
+      
       const wilayasUrl = `${API_BASE_URL}/Wilayas`;
       console.log("📡 BTC URL:", btcUrl);
       console.log("📡 Wilayas URL:", wilayasUrl);
@@ -304,6 +313,14 @@ export default function CTSPage() {
   useEffect(() => {
     fetchData()
   }, [])
+
+  useEffect(() => {
+    // Ne pas déclencher lors du premier rendu (l'autre useEffect s'en charge)
+    if (!loading) {
+      console.log("🔄 Wilaya selection changed to:", selectedWilaya);
+      fetchData();
+    }
+  }, [selectedWilaya])
 
   const handleRetry = () => {
     fetchData()
