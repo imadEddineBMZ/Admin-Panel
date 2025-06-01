@@ -12,8 +12,8 @@ import { Alert, AlertDescription } from "@/components/ui/alert"
 import { useState, useEffect } from "react"
 
 // Configuration
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "https://localhost:5000"
-const USE_MOCK_DATA = process.env.NEXT_PUBLIC_USE_MOCK_DATA === "true"
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "https://192.168.1.213:57679"
+const USE_MOCK_DATA = process.env.NEXT_PUBLIC_USE_MOCK_DATA === "false"
 
 // API Response Interfaces
 interface DashboardStatsDTO {
@@ -267,6 +267,7 @@ export default function AnalyticsPage() {
 
   useEffect(() => {
     fetchData()
+    
   }, [])
 
   const handleRetry = () => {

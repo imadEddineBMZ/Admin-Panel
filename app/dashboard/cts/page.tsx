@@ -12,7 +12,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { useState, useEffect } from "react"
 
 // Configuration
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "https://localhost:5000"
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "https://192.168.1.213:57699"
 const USE_MOCK_DATA = process.env.NEXT_PUBLIC_USE_MOCK_DATA === "true"
 
 // API Response Interfaces
@@ -189,7 +189,13 @@ export default function CTSPage() {
   const [usingMockData, setUsingMockData] = useState(false)
 
   const fetchData = async (retryCount = 0) => {
+    // Log initial pour démarrer le traçage
+    console.log("🔍 fetchData called, retryCount:", retryCount);
+    console.log("📊 USE_MOCK_DATA:", USE_MOCK_DATA);
+    console.log("🌐 API_BASE_URL:", API_BASE_URL);
+
     if (USE_MOCK_DATA) {
+      console.log("📋 Using mock data instead of API");
       setCenters(mockCenters)
       setWilayas(mockWilayas)
       setUsingMockData(true)
@@ -205,15 +211,25 @@ export default function CTSPage() {
       const timeoutId = setTimeout(() => controller.abort(), 10000)
 
       // Fetch both centers and wilayas
+      const filter = {
+        wilayaId: 16,  // 0 pour tous les wilayas ou une valeur spécifique
+        paginationTake: 50,
+        paginationSkip: 0
+      };
+      
+      // Log avant de faire les requêtes
+      console.log("🔄 Preparing to fetch with filter:", filter);
+      const btcUrl = `${API_BASE_URL}/BTC?wilayaId=${filter.wilayaId}&paginationTake=${filter.paginationTake}&paginationSkip=${filter.paginationSkip}&level=0`;
+      const wilayasUrl = `${API_BASE_URL}/Wilayas`;
+      console.log("📡 BTC URL:", btcUrl);
+      console.log("📡 Wilayas URL:", wilayasUrl);
+
       const [centersResponse, wilayasResponse] = await Promise.all([
-        fetch(`${API_BASE_URL}/BTC`, {
+        fetch(btcUrl, {
           method: "GET",
-          headers: {
-            "Content-Type": "application/json",
-          },
           signal: controller.signal,
         }),
-        fetch(`${API_BASE_URL}/Wilayas`, {
+        fetch(wilayasUrl, {
           method: "GET",
           headers: {
             "Content-Type": "application/json",
@@ -223,25 +239,52 @@ export default function CTSPage() {
       ])
 
       clearTimeout(timeoutId)
+      
+      // Log des statuts de réponse
+      console.log("✅ BTC Response status:", centersResponse.status);
+      console.log("✅ Wilayas Response status:", wilayasResponse.status);
 
       if (!centersResponse.ok) {
+        // Log du corps de la réponse d'erreur si possible
+        const errorText = await centersResponse.text().catch(e => "Could not read error response");
+        console.error("❌ BTC Error response body:", errorText);
         throw new Error(`Failed to fetch centers: ${centersResponse.status}`)
       }
       if (!wilayasResponse.ok) {
+        const errorText = await wilayasResponse.text().catch(e => "Could not read error response");
+        console.error("❌ Wilayas Error response body:", errorText);
         throw new Error(`Failed to fetch wilayas: ${wilayasResponse.status}`)
       }
 
+      // Cloner les réponses pour pouvoir les logger et les utiliser
+      const centersResponseClone = centersResponse.clone();
+      const wilayasResponseClone = wilayasResponse.clone();
+
       const centersData: ListBloodTansfusionCentersResponse = await centersResponse.json()
       const wilayasData: ListWilayasResponse = await wilayasResponse.json()
+      
+      // Log des données reçues
+      console.log("📥 BTC centers count:", centersData.bloodTansfusionCenters?.length || 0);
+      console.log("📥 Wilayas count:", wilayasData.wilayas?.length || 0);
 
       setCenters(centersData.bloodTansfusionCenters || [])
       setWilayas(wilayasData.wilayas || [])
       setIsOnline(true)
       setUsingMockData(false)
+      
+      console.log("✅ Data fetched successfully and state updated");
     } catch (err) {
-      console.error("Error fetching data:", err)
+      console.error("❌ Error fetching data:", err);
+      
+      // Log plus détaillé des erreurs
+      if (err instanceof Error) {
+        console.error("❌ Error name:", err.name);
+        console.error("❌ Error message:", err.message);
+        console.error("❌ Error stack:", err.stack);
+      }
 
       if (retryCount < 2) {
+        console.log("🔄 Retrying fetch, attempt:", retryCount + 1);
         setTimeout(() => fetchData(retryCount + 1), 2000)
         return
       }
@@ -251,8 +294,10 @@ export default function CTSPage() {
       setWilayas(mockWilayas)
       setUsingMockData(true)
       setIsOnline(false)
+      console.log("⚠️ Falling back to mock data after failed fetch attempts");
     } finally {
       setLoading(false)
+      console.log("🏁 fetchData completed");
     }
   }
 

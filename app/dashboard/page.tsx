@@ -46,7 +46,7 @@ interface GetDashboardStatsResponse {
 }
 
 // Configuration
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "https://localhost:5000"
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "https://192.168.1.213:57699"
 const USE_MOCK_DATA = process.env.NEXT_PUBLIC_USE_MOCK_DATA === "true"
 
 // Blood group mapping
